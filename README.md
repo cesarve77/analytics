@@ -32,7 +32,7 @@ $ meteor add cesarve:analytics
 When the package is added every new visited page will be logged in a mongo collection: `Analytics.Connections`.
 Example:
 
-```JSON
+```
 {
     "_id": "eHDSJrayaQEGjRDe9",                         //Unique Doc Id (mongoId)
     "deviceOrUserId": "NFBFdx9KNBFPRXzpGxJKMgEqv",      //Unique Id for User (if is logged) or device (if not logged)
