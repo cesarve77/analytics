@@ -14,7 +14,7 @@ function isTrackableRole() {
     }
     let Roles = Package['alanning:roles'].Roles
     let result= !Roles.userIsInRole(Meteor.userId(), Analytics.adminRoles.concat(Analytics.noTrackableRoles))
-    console.log(isTrackableRole,Meteor.userId(),result)
+
 }
 
 if (Meteor.isClient) {
@@ -44,7 +44,7 @@ if (Meteor.isClient) {
              window.addEventListener('blur', () => Meteor.call('analytics.addEvent', 'blur', getDeviceOrUserId()))
              window.addEventListener('focus', () => Meteor.call('analytics.addEvent', 'focus', getDeviceOrUserId()))
         } else {
-            log('widnow removed')
+
             window.removeEventListener('blur', () => Meteor.call('analytics.addEvent', 'blur', getDeviceOrUserId()))
             window.removeEventListener('focus', () => Meteor.call('analytics.addEvent', 'focus', getDeviceOrUserId()))
         }
@@ -58,29 +58,23 @@ if (Meteor.isClient) {
         var Router = Package['iron:router'].Router;
         Router.onRun(function () {
             if (isTrackableRole()) {
-                console.log('IRON .addEvent')
+
                 Meteor.call('analytics.addEvent', 'pageView', getDeviceOrUserId(), Router.current().location.get().path)
             }
-
             this.next();
-
-
         });
     }
-
     /*
      Add new Connection
      */
     Meteor.startup(function () {
         if (isTrackableRole())
-            console.log('first new connection')
         Meteor.call('analytics.addConnection', getDeviceOrUserId(), location.pathname + location.search)
-        log('location.href', location)
     })
-
     /*
      Track login state changes
      */
+    //todo creo es mejor meter esto en onLogin ya que corre exlusivamente en el servidor
     Tracker.autorun(function () {
             if (!Meteor.userId() && Session.equals('Analytics-deviceId', undefined)) {
                 Session.set('Analytics-deviceId', getDeviceOrUserId());
@@ -119,12 +113,10 @@ if (Meteor.isServer) {
      */
 
     Meteor.startup(()=> {
-
         console.log('inconsistencies', Analytics.Connections.update({endDate: {$exists: false}}, {$set: {endDate: undefined}}, {multi: true}))
     })
 
     Meteor.methods({
-
         /*
          update from deviceId to userId, called  on  user login see Track Login
          */
@@ -152,9 +144,7 @@ if (Meteor.isServer) {
             if (isTrackableRole()) {
                 this.connection.onClose(()=> {
                     Analytics.Connections.update({_id: this.connection.id}, {$set: {endDate: new Date()}})
-                    log('-------Connection closed--------')
                 })
-                log('new Connection',this.connection.id)
                 Analytics.Connections.update({deviceOrUserId, endDate: {$exists: false}}, {$set: {endDate: new Date()}})
                 const geoIp = Npm.require('geoip-lite')
                 let parser = new UAParser()
@@ -173,7 +163,7 @@ if (Meteor.isServer) {
                 connection.geoData = geoIp.lookup(this.connection.clientAddress)
                 connection.startDate = new Date()
                 connection.events = []
-                console.log(Analytics.Connections.insert(connection));
+                Analytics.Connections.insert(connection);
                 //Meteor.call('analytics.addEvent', 'pageView', deviceOrUserId, path)
             }
             return false;
@@ -188,7 +178,6 @@ if (Meteor.isServer) {
 
             this.unblock()
             if (isTrackableRole()) {
-                log('new Event ' + type)
                 let event = {
                     connectionId: this.connection.id,
                     type,
@@ -229,16 +218,8 @@ if (Meteor.isServer) {
 
 
     process.on('SIGTERM', Meteor.bindEnvironment(function () {
-        console.log('closing', Analytics.Connections.update({endDate: {$exists: false}}, {$set: {endDate: new Date()}}, {multi: true}))
+        Analytics.Connections.update({endDate: {$exists: false}}, {$set: {endDate: new Date()}}, {multi: true})
         process.exit(0)
     }))
 
-
-    /*
-     Accounts.onCreateUser(function (options, user) {
-     console.log('xxxxx',this,options,user)
-     user._id='xxxxxssx' + Random.id();
-     return user;
-     });
-     */
 }

@@ -25,7 +25,7 @@ Analytics.configure = function (options) {
                 throw new Meteor.Error('401', 'Analytics.noTrackableRoles have to be a Array')
     }
 }
-//todo pubish just for somes roles
+//todo publish just for somes roles
 
 if (Meteor.isServer) {
 
@@ -38,8 +38,8 @@ if (Meteor.isServer) {
             return true
         }
         let Roles = Package['alanning:roles'].Roles
-        let result = Roles.userIsInRole(Analytics.adminRoles)
-        console.log('result', result)
+        let result = Roles.userIsInRole(userId,Analytics.adminRoles)
+        console.log('result', userId,Analytics.adminRoles, result)
         return result
 
     }
@@ -52,7 +52,8 @@ if (Meteor.isServer) {
         const now = new Date
         now.setSeconds(now.getSeconds() - 3)
         if (isPublishableRole(this.userId))
-            return [Analytics.Connections.find({endDate: {$exists: false}}), Analytics.Events.find({date: {$gte: now}})]
+            return [Analytics.Connections.find({
+                endDate: {$exists: false}}), Analytics.Events.find({date: {$gte: now}})]
         else
             return [Analytics.Connections.find({
                 deviceOrUserId,
